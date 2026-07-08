@@ -1,0 +1,715 @@
+function Drawer.new 0
+push constant 11
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop this 0
+push constant 0
+pop this 1
+push constant 4
+pop this 2
+push constant 0
+pop this 3
+push constant 17
+call Array.new 1
+pop this 4
+push constant 17
+call Array.new 1
+pop this 5
+push constant 17
+call Array.new 1
+pop this 6
+push constant 0
+pop this 7
+push constant 0
+pop this 8
+push constant 0
+pop this 9
+push constant 10
+pop this 10
+push pointer 0
+return
+function Drawer.dispose 0
+push argument 0
+pop pointer 0
+push this 4
+call Array.dispose 1
+pop temp 0
+push this 5
+call Array.dispose 1
+pop temp 0
+push this 6
+call Array.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Drawer.clearCanvas 3
+push argument 0
+pop pointer 0
+push this 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+call Drawer.hideCursor 1
+pop temp 0
+label IF_FALSE0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push constant 256
+lt
+not
+if-goto WHILE_END0
+push constant 8
+pop local 1
+label WHILE_EXP1
+push local 1
+push constant 24
+lt
+not
+if-goto WHILE_END1
+push constant 16384
+push local 0
+push constant 32
+call Math.multiply 2
+add
+push local 1
+add
+pop local 2
+push local 2
+push constant 0
+call Memory.poke 2
+pop temp 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP1
+label WHILE_END1
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Drawer.inCanvas 0
+push argument 0
+pop pointer 0
+push argument 1
+push constant 128
+neg
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push argument 1
+push constant 127
+gt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push argument 2
+push constant 127
+gt
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 0
+return
+label IF_FALSE2
+push argument 2
+push constant 128
+neg
+lt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 0
+return
+label IF_FALSE3
+push constant 0
+not
+return
+function Drawer.toScreenX 0
+push argument 0
+pop pointer 0
+push argument 1
+push constant 256
+add
+return
+function Drawer.toScreenY 0
+push argument 0
+pop pointer 0
+push constant 127
+push argument 1
+sub
+return
+function Drawer.getBitMask 2
+push argument 0
+pop pointer 0
+push constant 1
+pop local 0
+push constant 0
+pop local 1
+label WHILE_EXP0
+push local 1
+push argument 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push constant 2
+call Math.multiply 2
+pop local 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return
+function Drawer.getPixel 7
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+push argument 2
+call Drawer.inCanvas 3
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push pointer 0
+push argument 1
+call Drawer.toScreenX 2
+pop local 0
+push pointer 0
+push argument 2
+call Drawer.toScreenY 2
+pop local 1
+push local 0
+push constant 16
+call Math.divide 2
+pop local 2
+push local 0
+push constant 16
+push local 2
+call Math.multiply 2
+sub
+pop local 3
+push constant 16384
+push local 1
+push constant 32
+call Math.multiply 2
+add
+push local 2
+add
+pop local 4
+push local 4
+call Memory.peek 1
+pop local 5
+push pointer 0
+push local 3
+call Drawer.getBitMask 2
+pop local 6
+push local 5
+push local 6
+and
+push constant 0
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push constant 1
+return
+function Drawer.drawPixel 7
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+push argument 2
+call Drawer.inCanvas 3
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push pointer 0
+push argument 1
+call Drawer.toScreenX 2
+pop local 0
+push pointer 0
+push argument 2
+call Drawer.toScreenY 2
+pop local 1
+push local 0
+push constant 16
+call Math.divide 2
+pop local 2
+push local 0
+push constant 16
+push local 2
+call Math.multiply 2
+sub
+pop local 3
+push constant 16384
+push local 1
+push constant 32
+call Math.multiply 2
+add
+push local 2
+add
+pop local 4
+push local 4
+call Memory.peek 1
+pop local 5
+push pointer 0
+push local 3
+call Drawer.getBitMask 2
+pop local 6
+push argument 3
+push constant 1
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push local 5
+push local 6
+or
+pop local 5
+goto IF_END1
+label IF_FALSE1
+push local 5
+push local 6
+not
+and
+pop local 5
+label IF_END1
+push local 4
+push local 5
+call Memory.poke 2
+pop temp 0
+push constant 0
+return
+function Drawer.drawScreenPixel 5
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push argument 1
+push constant 511
+gt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push argument 2
+push constant 0
+lt
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 0
+return
+label IF_FALSE2
+push argument 2
+push constant 255
+gt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 0
+return
+label IF_FALSE3
+push argument 1
+push constant 16
+call Math.divide 2
+pop local 0
+push argument 1
+push constant 16
+push local 0
+call Math.multiply 2
+sub
+pop local 1
+push constant 16384
+push argument 2
+push constant 32
+call Math.multiply 2
+add
+push local 0
+add
+pop local 2
+push local 2
+call Memory.peek 1
+pop local 3
+push pointer 0
+push local 1
+call Drawer.getBitMask 2
+pop local 4
+push argument 3
+push constant 1
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push local 3
+push local 4
+or
+pop local 3
+goto IF_END4
+label IF_FALSE4
+push local 3
+push local 4
+not
+and
+pop local 3
+label IF_END4
+push local 2
+push local 3
+call Memory.poke 2
+pop temp 0
+push constant 0
+return
+function Drawer.drawScreenRect 2
+push argument 0
+pop pointer 0
+push argument 2
+pop local 1
+label WHILE_EXP0
+push local 1
+push argument 4
+push constant 1
+add
+lt
+not
+if-goto WHILE_END0
+push argument 1
+pop local 0
+label WHILE_EXP1
+push local 0
+push argument 3
+push constant 1
+add
+lt
+not
+if-goto WHILE_END1
+push pointer 0
+push local 0
+push local 1
+push argument 5
+call Drawer.drawScreenPixel 4
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP1
+label WHILE_END1
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Drawer.addCursorPixel 1
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+push argument 2
+call Drawer.inCanvas 3
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push pointer 0
+push argument 1
+push argument 2
+call Drawer.getPixel 3
+pop local 0
+push this 7
+push this 4
+add
+push argument 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push this 7
+push this 5
+add
+push argument 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push this 7
+push this 6
+add
+push local 0
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push this 7
+push constant 1
+add
+pop this 7
+push local 0
+push constant 0
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+push argument 1
+push argument 2
+push constant 1
+call Drawer.drawPixel 4
+pop temp 0
+goto IF_END1
+label IF_FALSE1
+push pointer 0
+push argument 1
+push argument 2
+push constant 0
+call Drawer.drawPixel 4
+pop temp 0
+label IF_END1
+push constant 0
+return
+function Drawer.showCursor 1
+push argument 0
+pop pointer 0
+push this 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+call Drawer.hideCursor 1
+pop temp 0
+label IF_FALSE0
+push argument 1
+pop this 0
+push argument 2
+pop this 1
+push constant 0
+pop this 7
+push this 2
+neg
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 2
+push constant 1
+add
+lt
+not
+if-goto WHILE_END0
+push pointer 0
+push argument 1
+push local 0
+add
+push argument 2
+call Drawer.addCursorPixel 3
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push this 2
+neg
+pop local 0
+label WHILE_EXP1
+push local 0
+push this 2
+push constant 1
+add
+lt
+not
+if-goto WHILE_END1
+push local 0
+push constant 0
+eq
+not
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+push argument 1
+push argument 2
+push local 0
+add
+call Drawer.addCursorPixel 3
+pop temp 0
+label IF_FALSE1
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP1
+label WHILE_END1
+push constant 0
+not
+pop this 3
+push constant 0
+return
+function Drawer.hideCursor 1
+push argument 0
+pop pointer 0
+push this 3
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push this 7
+lt
+not
+if-goto WHILE_END0
+push pointer 0
+push local 0
+push this 4
+add
+pop pointer 1
+push that 0
+push local 0
+push this 5
+add
+pop pointer 1
+push that 0
+push local 0
+push this 6
+add
+pop pointer 1
+push that 0
+call Drawer.drawPixel 4
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+pop this 3
+push constant 0
+pop this 7
+push constant 0
+return
+function Drawer.drawCanvasBorder 2
+push argument 0
+pop pointer 0
+push constant 0
+pop local 1
+label WHILE_EXP0
+push local 1
+push constant 3
+lt
+not
+if-goto WHILE_END0
+push constant 128
+neg
+push local 1
+add
+pop local 0
+label WHILE_EXP1
+push local 0
+push constant 128
+push local 1
+sub
+lt
+not
+if-goto WHILE_END1
+push pointer 0
+push local 0
+push constant 127
+push local 1
+sub
+push constant 1
+call Drawer.drawPixel 4
+pop temp 0
+push pointer 0
+push local 0
+push constant 128
+neg
+push local 1
+add
+push constant 1
+call Drawer.drawPixel 4
+pop temp 0
+push pointer 0
+push constant 128
+neg
+push local 1
+add
+push local 0
+push constant 1
+call Drawer.drawPixel 4
+pop temp 0
+push pointer 0
+push constant 127
+push local 1
+sub
+push local 0
+push constant 1
+call Drawer.drawPixel 4
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP1
+label WHILE_END1
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return

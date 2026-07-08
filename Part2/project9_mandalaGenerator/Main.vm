@@ -1,0 +1,576 @@
+function Main.main 1
+call InitiationUI.new 0
+pop local 0
+push local 0
+call InitiationUI.showWelcomePage 1
+pop temp 0
+push local 0
+call InitiationUI.waitForStart 1
+pop temp 0
+push local 0
+call InitiationUI.showInstructions 1
+pop temp 0
+push local 0
+call InitiationUI.dispose 1
+pop temp 0
+call Main.init 0
+pop temp 0
+call Main.loop 0
+pop temp 0
+push constant 0
+return
+function Main.init 0
+call Drawer.new 0
+pop static 0
+push constant 1000
+call History.new 1
+pop static 1
+push static 1
+push constant 0
+push constant 0
+push constant 1
+push constant 0
+call History.resetState 5
+pop temp 0
+push static 0
+push constant 0
+push constant 0
+call Drawer.showCursor 3
+pop temp 0
+call Main.printCursorPosition 0
+pop temp 0
+push constant 0
+return
+function Main.loop 1
+label WHILE_EXP0
+push constant 0
+not
+not
+if-goto WHILE_END0
+call Keyboard.keyPressed 0
+pop local 0
+push local 0
+push constant 0
+eq
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 0
+call Main.handleKey 1
+pop temp 0
+label IF_FALSE0
+push constant 60
+call Sys.wait 1
+pop temp 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Main.handleKey 0
+push argument 0
+push constant 82
+eq
+push argument 0
+push constant 114
+eq
+or
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+push constant 1
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE0
+push argument 0
+push constant 68
+eq
+push argument 0
+push constant 100
+eq
+or
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+neg
+push constant 0
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE1
+push argument 0
+push constant 70
+eq
+push argument 0
+push constant 102
+eq
+or
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 0
+push constant 1
+neg
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE2
+push argument 0
+push constant 71
+eq
+push argument 0
+push constant 103
+eq
+or
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 1
+push constant 0
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE3
+push argument 0
+push constant 69
+eq
+push argument 0
+push constant 101
+eq
+or
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push constant 1
+neg
+push constant 1
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE4
+push argument 0
+push constant 84
+eq
+push argument 0
+push constant 116
+eq
+or
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push constant 1
+push constant 1
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE5
+push argument 0
+push constant 88
+eq
+push argument 0
+push constant 120
+eq
+or
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push constant 1
+neg
+push constant 1
+neg
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE6
+push argument 0
+push constant 66
+eq
+push argument 0
+push constant 98
+eq
+or
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push constant 1
+push constant 1
+neg
+call Main.moveCursor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE7
+push argument 0
+push constant 48
+eq
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push static 1
+push constant 0
+call History.setDrawMode 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE8
+push argument 0
+push constant 49
+eq
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push static 1
+push constant 1
+call History.setDrawMode 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE9
+push argument 0
+push constant 50
+eq
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push static 1
+push constant 1
+call History.setColor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE10
+push argument 0
+push constant 51
+eq
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+push static 1
+push constant 0
+call History.setColor 2
+pop temp 0
+push constant 0
+return
+label IF_FALSE11
+push argument 0
+push constant 67
+eq
+push argument 0
+push constant 99
+eq
+or
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+call Main.clear 0
+pop temp 0
+push constant 0
+return
+label IF_FALSE12
+push argument 0
+push constant 90
+eq
+push argument 0
+push constant 122
+eq
+or
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+call Main.undo 0
+pop temp 0
+push constant 0
+return
+label IF_FALSE13
+push argument 0
+push constant 89
+eq
+push argument 0
+push constant 121
+eq
+or
+if-goto IF_TRUE14
+goto IF_FALSE14
+label IF_TRUE14
+call Main.redo 0
+pop temp 0
+push constant 0
+return
+label IF_FALSE14
+push constant 0
+return
+function Main.moveCursor 1
+push static 0
+call Drawer.hideCursor 1
+pop temp 0
+push static 1
+push argument 0
+push argument 1
+call History.moveCursor 3
+pop local 0
+push local 0
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push static 1
+call History.getDrawMode 1
+push constant 1
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+call Main.drawAtCursor 0
+pop temp 0
+label IF_FALSE1
+label IF_FALSE0
+push static 0
+push static 1
+call History.getCursorX 1
+push static 1
+call History.getCursorY 1
+call Drawer.showCursor 3
+pop temp 0
+call Main.printCursorPosition 0
+pop temp 0
+push constant 0
+return
+function Main.printCursorPosition 1
+push constant 21
+push constant 49
+call Output.moveCursor 2
+pop temp 0
+push constant 0
+pop local 0
+label WHILE_EXP0
+push local 0
+push constant 15
+lt
+not
+if-goto WHILE_END0
+push constant 32
+call Output.printChar 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 21
+push constant 49
+call Output.moveCursor 2
+pop temp 0
+push constant 80
+call Output.printChar 1
+pop temp 0
+push constant 111
+call Output.printChar 1
+pop temp 0
+push constant 115
+call Output.printChar 1
+pop temp 0
+push constant 58
+call Output.printChar 1
+pop temp 0
+push constant 40
+call Output.printChar 1
+pop temp 0
+push static 1
+call History.getCursorX 1
+call Output.printInt 1
+pop temp 0
+push constant 44
+call Output.printChar 1
+pop temp 0
+push static 1
+call History.getCursorY 1
+call Output.printInt 1
+pop temp 0
+push constant 41
+call Output.printChar 1
+pop temp 0
+push constant 0
+return
+function Main.drawAtCursor 0
+push static 1
+call History.getCursorX 1
+push static 1
+call History.getCursorY 1
+call Main.drawSymmetricPixel 2
+pop temp 0
+push constant 0
+return
+function Main.drawSymmetricPixel 1
+push static 1
+call History.getColor 1
+pop local 0
+push argument 0
+push argument 1
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 0
+neg
+push argument 1
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 0
+push argument 1
+neg
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 0
+neg
+push argument 1
+neg
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 1
+push argument 0
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 1
+neg
+push argument 0
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 1
+push argument 0
+neg
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push argument 1
+neg
+push argument 0
+neg
+push local 0
+call Main.plotPixel 3
+pop temp 0
+push constant 0
+return
+function Main.plotPixel 1
+push static 0
+push argument 0
+push argument 1
+call Drawer.inCanvas 3
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push static 0
+push argument 0
+push argument 1
+call Drawer.getPixel 3
+pop local 0
+push static 0
+push argument 0
+push argument 1
+push argument 2
+call Drawer.drawPixel 4
+pop temp 0
+push static 1
+push argument 0
+push argument 1
+push local 0
+push argument 2
+call History.recordPixel 5
+pop temp 0
+push constant 0
+return
+function Main.undo 0
+push static 0
+call Drawer.hideCursor 1
+pop temp 0
+push static 1
+call History.popUndo 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push static 0
+push static 1
+call History.getPendingX 1
+push static 1
+call History.getPendingY 1
+push static 1
+call History.getPendingOldColor 1
+call Drawer.drawPixel 4
+pop temp 0
+label IF_FALSE0
+push static 0
+push static 1
+call History.getCursorX 1
+push static 1
+call History.getCursorY 1
+call Drawer.showCursor 3
+pop temp 0
+push constant 0
+return
+function Main.redo 0
+push static 0
+call Drawer.hideCursor 1
+pop temp 0
+push static 1
+call History.popRedo 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push static 0
+push static 1
+call History.getPendingX 1
+push static 1
+call History.getPendingY 1
+push static 1
+call History.getPendingNewColor 1
+call Drawer.drawPixel 4
+pop temp 0
+label IF_FALSE0
+push static 0
+push static 1
+call History.getCursorX 1
+push static 1
+call History.getCursorY 1
+call Drawer.showCursor 3
+pop temp 0
+push constant 0
+return
+function Main.clear 0
+push static 0
+call Drawer.hideCursor 1
+pop temp 0
+push static 0
+call Drawer.clearCanvas 1
+pop temp 0
+push static 0
+call Drawer.drawCanvasBorder 1
+pop temp 0
+push static 1
+call History.clearUndoRedo 1
+pop temp 0
+push static 0
+push static 1
+call History.getCursorX 1
+push static 1
+call History.getCursorY 1
+call Drawer.showCursor 3
+pop temp 0
+push constant 0
+return

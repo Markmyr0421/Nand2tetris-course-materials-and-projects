@@ -1,0 +1,152 @@
+/**
+ * Handles the start screen and the static game instruction page.
+ */
+class InitiationUI {
+    field Drawer drawer;
+
+    constructor InitiationUI new() {
+        let drawer = Drawer.new();
+        return this;
+    }
+
+    method void dispose() {
+        do drawer.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /**
+     * Shows the welcome page.
+     * Screen text is 64 columns by 23 rows.
+     */
+    method void showWelcomePage() {
+        do Screen.clearScreen();
+
+        // Decorative title area.
+        do Output.moveCursor(7, 18);
+        do Output.printString("/////  Mandala Generator  /////");
+
+        do Output.moveCursor(9, 23);
+        do Output.printString("Mandala Generator");
+
+        do Output.moveCursor(11, 24);
+        do Output.printString("Author: Ma Youran");
+
+        do Output.moveCursor(15, 22);
+        do Output.printString("press space to start");
+
+        do Output.moveCursor(20, 12);
+        do Output.printString("A symmetric drawing tool for nand2tetris");
+
+        return;
+    }
+
+    /**
+     * Waits until the user presses space.
+     * Space has ASCII code 32.
+     */
+    method void waitForStart() {
+        var int key;
+
+        let key = 0;
+        while (~(key = 32)) {
+            let key = Keyboard.keyPressed();
+            do Sys.wait(5);
+        }
+
+        // Wait until space is released so the game does not read it again.
+        while (Keyboard.keyPressed() = 32) {
+            do Sys.wait(5);
+        }
+
+        return;
+    }
+
+    method void clearWelcomePage() {
+        do Screen.clearScreen();
+        return;
+    }
+
+    /**
+     * Shows the game page:
+     * - canvas in the center
+     * - movement instructions on the left
+     * - mode instructions on the right
+     */
+    method void showInstructions() {
+        do Screen.clearScreen();
+
+        do drawer.clearCanvas();
+        do drawer.drawCanvasBorder();
+        do drawMovementText();
+        do drawInstructionText();
+
+        return;
+    }
+
+    /**
+     * Prints movement controls on the left side of the canvas.
+     */
+    method void drawMovementText() {
+        do Output.moveCursor(1, 1);
+        do Output.printString("Move");
+
+        do Output.moveCursor(3, 1);
+        do Output.printString("E: up-left");
+
+        do Output.moveCursor(4, 1);
+        do Output.printString("R: up");
+
+        do Output.moveCursor(5, 1);
+        do Output.printString("T: up-right");
+
+        do Output.moveCursor(7, 1);
+        do Output.printString("D: left");
+
+        do Output.moveCursor(8, 1);
+        do Output.printString("F: down");
+
+        do Output.moveCursor(9, 1);
+        do Output.printString("G: right");
+
+        do Output.moveCursor(11, 1);
+        do Output.printString("X: down-left");
+
+        do Output.moveCursor(12, 1);
+        do Output.printString("B: down-right");
+
+        return;
+    }
+
+    /**
+     * Prints mode controls on the right side.
+     * Keep each line short because only 16 text columns fit right of the canvas.
+     */
+    method void drawInstructionText() {
+        do Output.moveCursor(3, 49);
+        do Output.printString("Modes");
+
+        do Output.moveCursor(7, 49);
+        do Output.printString("0: move only");
+
+        do Output.moveCursor(9, 49);
+        do Output.printString("1: draw mode");
+
+        do Output.moveCursor(11, 49);
+        do Output.printString("2: black");
+
+        do Output.moveCursor(13, 49);
+        do Output.printString("3: white");
+
+        do Output.moveCursor(15, 49);
+        do Output.printString("C: clear");
+
+        do Output.moveCursor(17, 49);
+        do Output.printString("Z: undo");
+
+        do Output.moveCursor(19, 49);
+        do Output.printString("Y: redo");
+
+        return;
+    }
+}

@@ -1,0 +1,219 @@
+# ===== Assembler.py =====
+import sys
+import Parser
+import Code
+import SymbolTable
+def main():
+    if len(sys.argv) < 2:
+        print("Error: Please provide an assembly file.")
+        print("Usage: python Assembler.py Prog.asm")
+        sys.exit(1) # Stops the program with an error code
+
+    input_filename = sys.argv[1]
+
+    if not input_filename.endswith(".asm"):
+            print("Error: File must have a .asm extension.")
+            sys.exit(1)
+            
+    output_filename = input_filename.replace(".asm", ".hack")
+    symbol_table = SymbolTable.SymbolTable()
+    next_ram_addr = 16  
+
+    pass1_parser = Parser.Parser(input_filename)
+    rom_address = 0
+
+    while pass1_parser.hasMoreCommands():
+        pass1_parser.advance()
+        instructionType = pass1_parser.getInstructionType()
+        
+        if instructionType == "L_inst":
+            label_symbol = pass1_parser.symbol()
+            symbol_table.addEntry(label_symbol, rom_address)
+        elif instructionType == "A_inst" or instructionType == "C_inst":
+            rom_address += 1
+
+    parser = Parser.Parser(input_filename)
+
+    with open(output_filename, "w") as out_file:
+        while parser.hasMoreCommands():
+
+            parser.advance()
+            instructionType = parser.getInstructionType()
+            if instructionType == "C_inst":
+                dest = parser.dest()
+                jump = parser.jump()
+                comp = parser.comp()
+
+                binary_dest = Code.dest(dest)
+                binary_jump = Code.jump(jump)
+                binary_comp = Code.comp(comp)
+                binary_code = "111" + binary_comp + binary_dest + binary_jump
+
+                out_file.write(binary_code + "\n")
+            
+            if instructionType == "A_inst":
+                symbol = parser.symbol()
+                if symbol.isdigit() == True:
+                    address = int(symbol)
+                    binary_address = bin(address)[2:].zfill(15)
+                elif symbol_table.contains(symbol) == False:
+                    symbol_table.addEntry(symbol,next_ram_addr)
+                    address = next_ram_addr
+                    binary_address = bin(address)[2:].zfill(15)
+                    next_ram_addr += 1
+                else:
+                    address = symbol_table.getAddress(symbol)
+                    binary_address = bin(address)[2:].zfill(15)
+
+
+                binary_code = "0" + binary_address
+                out_file.write(binary_code + "\n")
+        print(f"Assembly successful, created {output_filename}")
+        
+
+if __name__ == "__main__":
+    main()
+
+# ===== Parser.py =====
+class Parser:
+    def __init__(self,file_path: str):
+        self.instruction = []
+        self.current_index = -1
+        self.current_instruction = None
+        with open(file_path,"r") as file:
+            for line in file:
+                clean_line = line.split('//')[0].strip()
+                if clean_line:
+                    self.instruction.append(clean_line)
+    
+    def hasMoreCommands(self):
+        return (self.current_index + 1) < len(self.instruction)
+        
+    def advance(self):
+        self.current_index += 1
+        self.current_instruction = self.instruction[self.current_index]
+
+    def getInstructionType(self):
+        if self.current_instruction.startswith("@"):
+            return "A_inst"
+        elif self.current_instruction.startswith("("):
+            return "L_inst"
+        else:
+            return "C_inst"
+        
+    def symbol(self):
+        if self.getInstructionType() == "A_inst":
+            return self.current_instruction[1:]
+        if self.getInstructionType() == "L_inst":
+            return self.current_instruction[1:-1]
+        else:
+            return ""
+        
+    def dest(self):
+        if "=" in self.current_instruction:
+            a = self.current_instruction.find("=")
+            return self.current_instruction[:a]
+        else:
+            return ""
+        
+    def comp(self):
+        instruction = self.current_instruction
+        start_idx = 0
+        end_idx = len(instruction)
+        if "=" in instruction:
+            start_idx = instruction.find("=") + 1
+        if ";" in instruction:
+            end_idx = instruction.find(";")
+        return instruction[start_idx:end_idx]
+        
+    def jump(self):
+        instruction = self.current_instruction
+        if ";" in self.current_instruction:
+            start_idx = instruction.find(";") + 1
+            return instruction[start_idx:]
+        else:
+            return ""
+
+
+
+# ===== Code.py =====
+def dest(mnemonic:str):
+    dest_table = {
+    "": "000",
+    "M":  "001",
+    "D":  "010",
+    "MD": "011",
+    "A":  "100",
+    "AM": "101",
+    "AD": "110",
+    "AMD":"111"
+}
+    return dest_table.get(mnemonic,"000")
+
+def jump(mnemonic:str):
+    jump_table = {
+    "": "000",
+    "JGT": "001",
+    "JEQ": "010",
+    "JGE": "011",
+    "JLT": "100",
+    "JNE": "101",
+    "JLE": "110",
+    "JMP": "111"
+}
+    return jump_table.get(mnemonic,"000")
+
+def comp(mnemonic:str):
+    comp_table = {
+        "0":   "0101010",
+        "1":   "0111111",
+        "-1":  "0111010",
+        "D":   "0001100",
+        "A":   "0110000",
+        "!D":  "0001101",
+        "!A":  "0110001",
+        "-D":  "0001111",
+        "-A":  "0110011",
+        "D+1": "0011111",
+        "A+1": "0110111",
+        "D-1": "0001110",
+        "A-1": "0110010",
+        "D+A": "0000010",
+        "D-A": "0010011",
+        "A-D": "0000111",
+        "D&A": "0000000",
+        "D|A": "0010101",
+
+        "M":   "1110000",
+        "!M":  "1110001",
+        "-M":  "1110011",
+        "M+1": "1110111",
+        "M-1": "1110010",
+        "D+M": "1000010",
+        "D-M": "1010011",
+        "M-D": "1000111",
+        "D&M": "1000000",
+        "D|M": "1010101"
+    }
+    return comp_table.get(mnemonic,"000")
+            
+
+# ===== SymbolTable.py =====
+class SymbolTable:
+    def __init__(self):
+        self.table = {"SP":0,"LCL":1,"ARG":2,"THIS":3,"THAT":4,
+                      "R0":0,"R1":1,"R2":2,"R3":3,
+                      "R4":4,"R5":5,"R6":6,"R7":7,"R8":8,
+                      "R9":9,"R10":10,"R11":11,"R12":12,"R13":13,
+                      "R14":14,"R15":15,"SCREEN":16384,"KBD":24576}
+    def addEntry(self,symbol:str,address:int):
+        self.table[symbol] = address
+
+    def getAddress(self, symbol:str):
+        return self.table.get(symbol)
+    def contains(self, symbol:str):
+        return symbol in self.table
+    
+
+
+

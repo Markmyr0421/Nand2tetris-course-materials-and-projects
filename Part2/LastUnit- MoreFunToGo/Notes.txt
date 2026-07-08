@@ -1,0 +1,64 @@
+Better the current computer:
+
+-- DESIGN!!!
+System Designer/ Architect
+
+good design?
+modularity, simplicity, clear...
+
+SOLID design:
+O: Open/Closed Principle (very important!!!)
+
+Code should be open for extension, but closed for modification
+
+======================================================
+
+Extend the hack system:
+
+1. multiplication/division: often used
+
+bit-wise multiplication algorithm
+
+take the same algorithm, desing a chip written in HDL
+-> integrate to ALU
+
+This, require to extension to binary machine language
+-> need also extend assembly language 
+
+
+2. bit shifting, (ROR, LSL...)
+
+need also to develop hardware chip
+
+e.g divided by 2: use bit shifting rather than standard multiplication
+-> make compilers more efficient and optimized
+
+
+3. more memory storage
+
+e.g flash memory
+
+
+4. connecting hack computer to the Internet
+
+develop built in network interface chip
+
+
+5. Jack language improvement
+
+(1) syntax more friendly, inheritance
+(not only editing compiler, but also the virtual machine), 
+for, switch statement...
+
+=============================================
+
+Physical implementation of the hack computer:
+
+(1) emulate hack platform on existing device(PC, phone...)
+
+(2) BUilding everything from scratch hardware
+
+learn industrial strength HDL(VHDL, Verilog)
+rewrite the HDL programs
+programmable hardware platform(e.g FPGA) 
+can use physical FPGA, or FPGA simulator on PC

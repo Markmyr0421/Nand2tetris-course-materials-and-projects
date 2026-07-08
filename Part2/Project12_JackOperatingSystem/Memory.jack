@@ -1,0 +1,102 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+/**
+ * This library provides two services: direct access to the computer's main
+ * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
+ * consists of 32,768 words, each holding a 16-bit binary number.
+ */ 
+class Memory {
+    static Array ram;
+    static Array freeList;
+    /** Initializes the class. */
+    function void init() {
+        let ram = 0;
+        let freeList = 2048; // base address
+        let freeList[0] = 14334; // stores size
+        let freeList[1] = 0; // stores next
+
+        return;
+
+    }
+
+    /** Returns the RAM value at the given address. */
+    function int peek(int address) {
+        return ram[address];
+    }
+
+    /** Sets the RAM value at the given address to the given value. */
+    function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
+    }
+
+    /** Finds an available RAM block of the given size and returns
+     *  a reference to its base address. */
+    function int alloc(int size) {
+        var Array current, previous, newFree;
+        var int remaining, blockSize;
+
+        if (size < 1) {
+            do Sys.error(2);
+        }
+
+        let previous = 0;
+        let current = freeList;
+
+        // Walk through the free-list until we find a big enough block.
+        while (~(current = 0)) {
+            let blockSize = current[0];
+
+            if (blockSize > (size - 1)) {
+                let remaining = blockSize - size - 2;
+
+                if (remaining > 1) {
+                    // Split the block: current is allocated, newFree is leftover.
+                    let newFree = current + size + 2;
+                    let newFree[0] = remaining;
+                    let newFree[1] = current[1];
+
+                    if (previous = 0) {
+                        let freeList = newFree;
+                    } else {
+                        let previous[1] = newFree;
+                    }
+
+                    let current[0] = size;
+                } else {
+                    // Leftover is too small for metadata, so consume whole block.
+                    if (previous = 0) {
+                        let freeList = current[1];
+                    } else {
+                        let previous[1] = current[1];
+                    }
+                }
+
+                let current[1] = 0;
+                return current + 2;
+            }
+
+            let previous = current;
+            let current = current[1];
+        }
+
+        // No block was large enough.
+        do Sys.error(6);
+        return 0;
+    }
+
+    /** De-allocates the given object (cast as an array) by making
+     *  it available for future allocations. */
+    function void deAlloc(Array o) {
+        var Array block;
+        // o points to the usable memory.
+        // The block metadata starts 2 words before it.
+        let block = o - 2;
+        // Insert this block at the beginning of the free-list.
+        let block[1] = freeList;
+        let freeList = block;
+        return;
+    }    
+}

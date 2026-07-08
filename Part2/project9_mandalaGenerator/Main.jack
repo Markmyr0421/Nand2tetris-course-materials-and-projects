@@ -1,0 +1,287 @@
+/**
+ * Control layer.
+ * Reads keyboard input, moves the cursor, draws symmetric pixels,
+ * and connects Drawer with History.
+ */
+class Main {
+    static Drawer drawer;
+    static History history;
+
+    function void main() {
+        var InitiationUI ui;
+
+        let ui = InitiationUI.new();
+        do ui.showWelcomePage();
+        do ui.waitForStart();
+        do ui.showInstructions();
+        do ui.dispose();
+
+        do Main.init();
+        do Main.loop();
+        return;
+    }
+
+    function void init() {
+        let drawer = Drawer.new();
+
+        // 1000 records means undo can store the latest 1000 pixel changes.
+        let history = History.new(1000);
+        do history.resetState(0, 0, 1, 0);
+
+        do drawer.showCursor(0, 0);
+        do Main.printCursorPosition();
+        return;
+    }
+
+    /**
+     * Main game loop.
+     * If a key is held down, the same action keeps repeating.
+     */
+    function void loop() {
+        var int key;
+
+        while (true) {
+            let key = Keyboard.keyPressed();
+
+            if (~(key = 0)) {
+                do Main.handleKey(key);
+            }
+
+            // Controls how fast held keys repeat.
+            do Sys.wait(60);
+        }
+
+        return;
+    }
+
+    /**
+     * Keyboard mapping:
+     * R/D/F/G move cursor
+     * E/T/X/B move diagonally
+     * 0 draw mode off
+     * 1 draw mode on
+     * 2 black
+     * 3 white
+     * C clear
+     * Z undo
+     * Y redo
+     */
+    function void handleKey(int key) {
+        // R or r: up
+        if ((key = 82) | (key = 114)) {
+            do Main.moveCursor(0, 1);
+            return;
+        }
+
+        // D or d: left
+        if ((key = 68) | (key = 100)) {
+            do Main.moveCursor(-1, 0);
+            return;
+        }
+
+        // F or f: down
+        if ((key = 70) | (key = 102)) {
+            do Main.moveCursor(0, -1);
+            return;
+        }
+
+        // G or g: right
+        if ((key = 71) | (key = 103)) {
+            do Main.moveCursor(1, 0);
+            return;
+        }
+
+        // E or e: up-left
+        if ((key = 69) | (key = 101)) {
+            do Main.moveCursor(-1, 1);
+            return;
+        }
+
+        // T or t: up-right
+        if ((key = 84) | (key = 116)) {
+            do Main.moveCursor(1, 1);
+            return;
+        }
+
+        // X or x: down-left
+        if ((key = 88) | (key = 120)) {
+            do Main.moveCursor(-1, -1);
+            return;
+        }
+
+        // B or b: down-right
+        if ((key = 66) | (key = 98)) {
+            do Main.moveCursor(1, -1);
+            return;
+        }
+
+        // 0: cursor only moves.
+        if (key = 48) {
+            do history.setDrawMode(0);
+            return;
+        }
+
+        // 1: moving cursor also draws.
+        if (key = 49) {
+            do history.setDrawMode(1);
+            return;
+        }
+
+        // 2: set color black.
+        if (key = 50) {
+            do history.setColor(1);
+            return;
+        }
+
+        // 3: set color white, used like an eraser.
+        if (key = 51) {
+            do history.setColor(0);
+            return;
+        }
+
+        // C or c:clear canvas
+        if ((key = 67) | (key = 99)) {
+            do Main.clear();
+            return;
+        }
+
+        // Z or z:undo
+        if ((key = 90) | (key = 122)) {
+            do Main.undo();
+            return;
+        }
+
+        // Y or y:redo
+        if ((key = 89) | (key = 121)) {
+            do Main.redo();
+            return;
+        }
+
+        return;
+    }
+
+    /**
+     * Moves the cursor by one step.
+     * If draw mode is on, draw at the new cursor position.
+     */
+    function void moveCursor(int dx, int dy) {
+        var boolean moved;
+
+        do drawer.hideCursor();
+        let moved = history.moveCursor(dx, dy);
+
+        if (moved) {
+            if (history.getDrawMode() = 1) {
+                do Main.drawAtCursor();
+            }
+        }
+
+        do drawer.showCursor(history.getCursorX(), history.getCursorY());
+        do Main.printCursorPosition();
+        return;
+    }
+
+    /**
+     * Shows the current cursor coordinate in the right-side UI area.
+     */
+    function void printCursorPosition() {
+        var int i;
+
+        do Output.moveCursor(21, 49);
+
+        // Clear the previous coordinate text.
+        let i = 0;
+        while (i < 15) {
+            do Output.printChar(32);  //print a " " for 15 times
+            let i = i + 1;
+        }
+
+        do Output.moveCursor(21, 49);
+
+        // Print "Pos:(x,y)" without allocating String objects.
+        do Output.printChar(80);
+        do Output.printChar(111);
+        do Output.printChar(115);
+        do Output.printChar(58);
+        do Output.printChar(40);
+        do Output.printInt(history.getCursorX());
+        do Output.printChar(44);
+        do Output.printInt(history.getCursorY());
+        do Output.printChar(41);
+
+        return;
+    }
+
+    function void drawAtCursor() {
+        do Main.drawSymmetricPixel(history.getCursorX(), history.getCursorY());
+        return;
+    }
+
+    /**
+     * Draws the 8-way symmetric pixels for one logical point.
+     */
+    function void drawSymmetricPixel(int x, int y) {
+        var int color;
+
+        let color = history.getColor();
+
+        do Main.plotPixel(x, y, color);
+        do Main.plotPixel(-x, y, color);
+        do Main.plotPixel(x, -y, color);
+        do Main.plotPixel(-x, -y, color);
+        do Main.plotPixel(y, x, color);
+        do Main.plotPixel(-y, x, color);
+        do Main.plotPixel(y, -x, color);
+        do Main.plotPixel(-y, -x, color);
+
+        return;
+    }
+
+    /**
+     * Draws one pixel and records it even if the color is already the same.
+     */
+    function void plotPixel(int x, int y, int color) {
+        var int oldColor;
+
+        if (~(drawer.inCanvas(x, y))) {
+            return;
+        }
+
+        let oldColor = drawer.getPixel(x, y);
+
+        do drawer.drawPixel(x, y, color);
+        do history.recordPixel(x, y, oldColor, color);
+        return;
+    }
+
+    function void undo() {
+        do drawer.hideCursor();
+
+        if (history.popUndo()) {
+            do drawer.drawPixel(history.getPendingX(), history.getPendingY(), history.getPendingOldColor());
+        }
+
+        do drawer.showCursor(history.getCursorX(), history.getCursorY());
+        return;
+    }
+
+    function void redo() {
+        do drawer.hideCursor();
+
+        if (history.popRedo()) {
+            do drawer.drawPixel(history.getPendingX(), history.getPendingY(), history.getPendingNewColor());
+        }
+
+        do drawer.showCursor(history.getCursorX(), history.getCursorY());
+        return;
+    }
+
+    function void clear() {
+        do drawer.hideCursor();
+        do drawer.clearCanvas();
+        do drawer.drawCanvasBorder();
+        do history.clearUndoRedo();
+        do drawer.showCursor(history.getCursorX(), history.getCursorY());
+        return;
+    }
+}

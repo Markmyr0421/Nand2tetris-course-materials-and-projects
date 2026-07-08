@@ -1,0 +1,338 @@
+/**
+ * Draws and reads pixels on a 256x256 centered canvas.
+ * Canvas coordinates range from -128 to 127.
+ * Due to limitations in the Hack screen, only black and white can be used.
+ */
+class Drawer {
+    field int cursorX;
+    field int cursorY; // Coordinate of cursor center.
+    field int cursorSize; // Radius 4 creates a 9x9 plus cursor.
+    field boolean cursorVisible;
+    field Array cursorXs; 
+    field Array cursorYs; // Coordinates for every pixel used by the cursor.
+    field Array cursorOldColors;
+    field int cursorPixelCount; /* Used to restore the drawing underneath
+    the temporary "+" shaped cursor. */
+    field boolean cursorBlinkOn;
+    field int blinkCounter;
+    field int blinkInterval;
+    
+    constructor Drawer new(){
+        let cursorX = 0;
+        let cursorY = 0;
+        let cursorSize = 4;
+        let cursorVisible = false;
+        let cursorXs = Array.new(17);
+        let cursorYs = Array.new(17);
+        let cursorOldColors = Array.new(17);
+        let cursorPixelCount = 0;
+        let cursorBlinkOn = false;
+        let blinkCounter = 0;
+        let blinkInterval = 10;
+        return this; // Drawer constructor
+
+    }
+
+    method void dispose(){
+        do cursorXs.dispose();
+        do cursorYs.dispose(); // built-in dispose for array objects
+        do cursorOldColors.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /**
+     * Clears only the 256x256 canvas area.
+     * This writes whole screen words, so it is faster than clearing pixel by pixel.
+     */
+    method void clearCanvas(){
+        var int sy;
+        var int wordIndex;
+        var int address;
+
+        if (cursorVisible) {
+            do hideCursor();
+        }
+
+        let sy = 0;
+        while (sy < 256) {
+            // Canvas screen x is 128..383, which is word index 8..23.
+            let wordIndex = 8;
+            while (wordIndex < 24) {
+                let address = 16384 + (sy * 32) + wordIndex;
+                do Memory.poke(address, 0);
+                let wordIndex = wordIndex + 1;
+            }
+            let sy = sy + 1;
+        }
+        return;
+    }
+
+    method boolean inCanvas(int x, int y){
+        if (x<-128){
+            return false;
+        }
+        if (x>127){
+            return false;
+        }
+        if (y>127){
+            return false;
+        }
+        if (y<-128){
+            return false;
+        }
+        return true;  // limit the canva to a 256*256 area to the origin
+    }
+    method int toScreenX(int x){
+        return x+256;
+    }
+    method int toScreenY(int y){
+        return 127 - y; 
+    } // These two methods set the center of the 256x256 canvas as (0, 0).
+
+    method int getBitMask(int bitIndex) {
+        var int mask;
+        var int i;
+
+        let mask = 1;
+        let i = 0;
+
+        while (i < bitIndex) {
+            let mask = mask * 2;
+            let i = i + 1;
+        }
+
+        return mask; // Example: bitIndex 4 returns 16.
+    }
+
+
+    /**
+    * Returns 1 if the pixel at logical coordinate (x, y) is black.
+    * Returns 0 if it is white or outside the canvas.
+    */
+    method int getPixel(int x, int y){ 
+        var int sx;
+        var int sy; // x,y coordinate (256,127) on the screen as origin
+        var int wordIndex; //which word among the 512/16=32
+        var int bitIndex; //which bit inside that word
+        var int address; //mem addr that stores the 16pixels
+        var int word; // 16-bit binary value stored in screen mem addr
+        var int mask; // number where only target bit set to one
+
+        if (~(inCanvas(x, y))) {
+            return 0;
+        }
+
+        let sx = toScreenX(x);
+        let sy = toScreenY(y);
+        let wordIndex = sx / 16;
+        let bitIndex = sx - (16 * wordIndex);
+        let address = 16384 + (sy * 32) + wordIndex;
+        let word = Memory.peek(address); //the current word that exists in mem
+        let mask = getBitMask(bitIndex); // the place I wanna draw
+        if ((word&mask)=0){
+            return 0; // color white
+        }
+        return 1; // return color black
+    }
+    
+    /**
+    * Writes the place and color that you want to draw directly into the RAM.
+    */
+    method void drawPixel(int x, int y, int color){
+        var int sx;
+        var int sy; 
+        var int wordIndex;
+        var int bitIndex;
+        var int address; 
+        var int word; 
+        var int mask; 
+        
+        if (~(inCanvas(x, y))) {
+            return;
+        }
+
+        let sx = toScreenX(x);
+        let sy = toScreenY(y);
+        let wordIndex = sx / 16;
+        let bitIndex = sx - (16 * wordIndex);
+        let address = 16384 + (sy * 32) + wordIndex;
+        let word = Memory.peek(address);
+        let mask = getBitMask(bitIndex); 
+        if (color = 1){
+            let word = word | mask;
+        } else {
+            let word = word & (~mask);
+        }
+        do Memory.poke(address, word);
+        return;
+    }
+
+    /**
+     * Draws one pixel using real Hack screen coordinates.
+     * Use this for UI decorations outside the 256x256 canvas.
+     */
+    method void drawScreenPixel(int sx, int sy, int color) {
+        var int wordIndex;
+        var int bitIndex;
+        var int address;
+        var int word;
+        var int mask;
+
+        if (sx < 0) {
+            return;
+        }
+        if (sx > 511) {
+            return;
+        }
+        if (sy < 0) {
+            return;
+        }
+        if (sy > 255) {
+            return;
+        }
+
+        let wordIndex = sx / 16;
+        let bitIndex = sx - (16 * wordIndex);
+        let address = 16384 + (sy * 32) + wordIndex;
+        let word = Memory.peek(address);
+        let mask = getBitMask(bitIndex);
+
+        if (color = 1) {
+            let word = word | mask;
+        } else {
+            let word = word & (~mask);
+        }
+
+        do Memory.poke(address, word);
+        return;
+    }
+
+    /**
+     * Draws a filled rectangle using real Hack screen coordinates.
+     * x1/y1 is the top-left corner; x2/y2 is the bottom-right corner.
+     */
+    method void drawScreenRect(int x1, int y1, int x2, int y2, int color) {
+        var int x;
+        var int y;
+
+        let y = y1;
+        while (y < (y2 + 1)) {
+            let x = x1;
+            while (x < (x2 + 1)) {
+                do drawScreenPixel(x, y, color);
+                let x = x + 1;
+            }
+            let y = y + 1;
+        }
+
+        return;
+    }
+
+
+    /**
+    * a helper function that adds one temporary cursor pixel.
+    *It saves the old color first, then draws the inverse color.
+    */
+    method void addCursorPixel(int x, int y) {
+        var int oldColor;
+
+        if (~(inCanvas(x, y))) {
+            return;
+        }
+
+        let oldColor = getPixel(x, y);
+        let cursorXs[cursorPixelCount] = x;
+        let cursorYs[cursorPixelCount] = y;
+        let cursorOldColors[cursorPixelCount] = oldColor;
+        let cursorPixelCount = cursorPixelCount + 1;
+
+        // Invert the background so the cursor is visible on black or white.
+        if (oldColor = 0) {
+            do drawPixel(x, y, 1);
+        } else {
+            do drawPixel(x, y, 0);
+        }
+
+        return;
+    }
+   
+/**
+* Shows a 9x9 plus cursor centered at (x, y).
+*/
+    method void showCursor(int x, int y){
+        var int i;
+        if (cursorVisible){
+            do hideCursor();
+        }
+
+        let cursorX = x;
+        let cursorY = y;
+        let cursorPixelCount = 0;
+
+        // horizontal part
+        let i = -cursorSize;
+        while (i < (cursorSize + 1)) {
+            do addCursorPixel(x + i, y);
+            let i = i + 1; 
+        } 
+
+        //vertical part
+        let i = -cursorSize;
+        while (i < (cursorSize + 1)) {
+            if (~(i = 0)) {
+                do addCursorPixel(x, y + i);
+            }
+            let i = i + 1;
+        }
+
+        let cursorVisible = true;
+        return;
+    }
+
+
+/**
+    * Restores the real drawing underneath the temporary cursor.
+    */
+    method void hideCursor(){
+        var int i;
+
+        if (~cursorVisible){
+            return;
+        }
+
+        let i = 0;
+        while (i<cursorPixelCount){
+            do drawPixel(cursorXs[i],cursorYs[i],cursorOldColors[i]);
+            let i = i+1;
+        }
+
+        let cursorVisible = false;
+        let cursorPixelCount = 0;
+        return;
+    }
+
+/**
+ * Draws a 3-pixel thick black border inside the canvas.
+ * The border uses the outer 3 pixels of the 256x256 canvas.
+ */
+    method void drawCanvasBorder(){
+        var int i;
+        var int t;
+        let t = 0;
+        while (t < 3) {
+            let i = -128 + t;
+            while (i < (128 - t)) {
+                // Top and bottom border lines.
+                do drawPixel(i, 127 - t, 1);
+                do drawPixel(i, -128 + t, 1);
+                // Left and right border lines.
+                do drawPixel(-128 + t, i, 1);
+                do drawPixel(127 - t, i, 1);
+                let i = i + 1;
+            }
+            let t = t + 1;
+        }
+        return;
+    }
+}

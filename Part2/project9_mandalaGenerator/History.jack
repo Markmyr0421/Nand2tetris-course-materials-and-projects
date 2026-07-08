@@ -1,0 +1,242 @@
+/**
+ * Stores app state and pixel-by-pixel undo / redo history.
+ */
+class History {
+    field int capacity;
+
+    field int cursorX;
+    field int cursorY;
+    field int color;
+    field int drawMode;
+
+    field Array undoX;
+    field Array undoY;
+    field Array undoOldColor;
+    field Array undoNewColor;
+    field int undoTop;
+
+    field Array redoX;
+    field Array redoY;
+    field Array redoOldColor;
+    field Array redoNewColor;
+    field int redoTop;
+
+    // Last record popped by undo or redo.
+    field int pendingX;
+    field int pendingY;
+    field int pendingOldColor;
+    field int pendingNewColor;
+
+    constructor History new(int maxRecords) {
+        let capacity = maxRecords;
+
+        let undoX = Array.new(capacity);
+        let undoY = Array.new(capacity);
+        let undoOldColor = Array.new(capacity);
+        let undoNewColor = Array.new(capacity);
+
+        let redoX = Array.new(capacity);
+        let redoY = Array.new(capacity);
+        let redoOldColor = Array.new(capacity);
+        let redoNewColor = Array.new(capacity);
+
+        let undoTop = 0;
+        let redoTop = 0;
+
+        do resetState(0, 0, 1, 0);
+        return this;
+    }
+
+    method void dispose() {
+        do undoX.dispose();
+        do undoY.dispose();
+        do undoOldColor.dispose();
+        do undoNewColor.dispose();
+
+        do redoX.dispose();
+        do redoY.dispose();
+        do redoOldColor.dispose();
+        do redoNewColor.dispose();
+
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void resetState(int startX, int startY, int startColor, int startDrawMode) {
+        let cursorX = startX;
+        let cursorY = startY;
+        let color = startColor;
+        let drawMode = startDrawMode;
+        do clearUndoRedo();
+        return;
+    }
+
+    method int getCursorX() {
+        return cursorX;
+    }
+
+    method int getCursorY() {
+        return cursorY;
+    }
+
+    method void setCursor(int x, int y) {
+        let cursorX = x;
+        let cursorY = y;
+        return;
+    }
+
+    /**
+     * Moves the cursor inside the drawable area.
+     * The outer canvas pixels are reserved for the thick border.
+     */
+    method boolean moveCursor(int dx, int dy) {
+        var int newX;
+        var int newY;
+
+        let newX = cursorX + dx;
+        let newY = cursorY + dy;
+
+        if (newX < -124) {
+            return false;
+        }
+        if (newX > 124) {
+            return false;
+        }
+        if (newY < -124) {
+            return false;
+        }
+        if (newY > 124) {
+            return false;
+        }
+
+        let cursorX = newX;
+        let cursorY = newY;
+        return true;
+    }
+
+    method int getColor() {
+        return color;
+    }
+
+    method void setColor(int newColor) {
+        let color = newColor;
+        return;
+    }
+
+    method int getDrawMode() {
+        return drawMode;
+    }
+
+    method void setDrawMode(int mode) {
+        let drawMode = mode;
+        return;
+    }
+
+    method void toggleDrawMode() {
+        if (drawMode = 0) {
+            let drawMode = 1;
+        } else {
+            let drawMode = 0;
+        }
+        return;
+    }
+
+    /**
+     * Records one real pixel change.
+     * A new drawing action clears redo history.
+     */
+    method void recordPixel(int x, int y, int oldColor, int newColor) {
+        if (undoTop < capacity) {
+            let undoX[undoTop] = x;
+            let undoY[undoTop] = y;
+            let undoOldColor[undoTop] = oldColor;
+            let undoNewColor[undoTop] = newColor;
+            let undoTop = undoTop + 1;
+        }
+
+        let redoTop = 0;
+        return;
+    }
+
+    method boolean canUndo() {
+        return undoTop > 0;
+    }
+
+    method boolean canRedo() {
+        return redoTop > 0;
+    }
+
+    /**
+     * Pops one pixel from undo and pushes it onto redo.
+     */
+    method boolean popUndo() {
+        if (~canUndo()) {
+            return false;
+        }
+
+        let undoTop = undoTop - 1;
+
+        let pendingX = undoX[undoTop];
+        let pendingY = undoY[undoTop];
+        let pendingOldColor = undoOldColor[undoTop];
+        let pendingNewColor = undoNewColor[undoTop];
+
+        if (redoTop < capacity) {
+            let redoX[redoTop] = pendingX;
+            let redoY[redoTop] = pendingY;
+            let redoOldColor[redoTop] = pendingOldColor;
+            let redoNewColor[redoTop] = pendingNewColor;
+            let redoTop = redoTop + 1;
+        }
+
+        return true;
+    }
+
+    /**
+     * Pops one pixel from redo and pushes it back onto undo.
+     */
+    method boolean popRedo() {
+        if (~canRedo()) {
+            return false;
+        }
+
+        let redoTop = redoTop - 1;
+
+        let pendingX = redoX[redoTop];
+        let pendingY = redoY[redoTop];
+        let pendingOldColor = redoOldColor[redoTop];
+        let pendingNewColor = redoNewColor[redoTop];
+
+        if (undoTop < capacity) {
+            let undoX[undoTop] = pendingX;
+            let undoY[undoTop] = pendingY;
+            let undoOldColor[undoTop] = pendingOldColor;
+            let undoNewColor[undoTop] = pendingNewColor;
+            let undoTop = undoTop + 1;
+        }
+
+        return true;
+    }
+
+    method int getPendingX() {
+        return pendingX;
+    }
+
+    method int getPendingY() {
+        return pendingY;
+    }
+
+    method int getPendingOldColor() {
+        return pendingOldColor;
+    }
+
+    method int getPendingNewColor() {
+        return pendingNewColor;
+    }
+
+    method void clearUndoRedo() {
+        let undoTop = 0;
+        let redoTop = 0;
+        return;
+    }
+}

@@ -1,0 +1,30 @@
+// Jack is simple, what should programmers worry about when building 
+a compiler for a more complex language?
+
+-- First, type conversion. All type in JACK is 16-bit, while in other languages,
+there are 16,32,64... THis means programmers need to handle type 
+conversions, expression handling when one types meets another type,
+resulting much more programming work.
+
+-- second, Jack has no inheritance, the compilers knows which function/
+or method is called during compile time. while method overriding, inheritance... needed to be handled during runtime
+
+-- That makes a Jack compiler much easier because it can use simple symbol
+ tables and direct VM calls instead of class hierarchy analysis, inherited 
+ layout construction, and runtime dispatch.
+
+ the class hierachy-> also called "late binding"
+
+
+
+-- thirdly, JAck cannot assign charcater constants to type "char"
+need to use stirng methods, instead
+
+
+
+
+// what is the meaning of compiler optimization?
+
+compiler itself is efficient -> not important!!!
+
+the low level code it generated being effiencient -> inportant!!!
